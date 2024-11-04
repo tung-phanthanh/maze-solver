@@ -1,0 +1,64 @@
+package solvers;
+
+import main.Maze;
+import main.MazeGridPanel;
+
+import utils.*;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+public class BFSSolver {
+
+    private final Queue<Cell> queue = new LinkedList<>();
+    private Cell current;
+    private final List<Cell> grid;
+
+    public BFSSolver(List<Cell> grid, MazeGridPanel panel) {
+        this.grid = grid;
+        current = grid.getFirst();
+        current.setDistance(0);
+        queue.offer(current);
+        final Timer timer = new Timer(Maze.speed, null);
+        timer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!current.equals(grid.getLast())) {
+                    BFS();
+                } else {
+                    drawPath();
+                    Maze.solved = true;
+                    timer.stop();
+                }
+                panel.setCurrent(current);
+                panel.repaint();
+                timer.setDelay(Maze.speed);
+            }
+        });
+        timer.start();
+    }
+
+    private void BFS() {
+        current.setDeadEnd(true);
+        current = queue.poll();
+        List<Cell> adjacentCells = current.getValidMoveNeighbours(grid);
+        for (Cell c : adjacentCells) {
+            if (c.getDistance() == -1) {
+                c.setDistance(current.getDistance() + 1);
+                c.setParent(current);
+                queue.offer(c);
+            }
+        }
+    }
+
+    private void drawPath() {
+        while (current != grid.getFirst()) {
+            current.setPath(true);
+            current = current.getParent();
+        }
+    }
+}
